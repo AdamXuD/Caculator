@@ -15,23 +15,20 @@ public:
         while (1)
         {
             empty();
-            cout << "Input your formula here:>" << endl;
+            cout << "Input your formula here (put a ';' at the end of formula)>" << endl;
             getline(cin, this->formula, ';');
             if (!isLegal())
             {
                 continue;
             }
-            toRPN();
-            caculateRPN();
-            printf("Result is %d", (int)this->result);
-            empty();
+            caculate();
+            printf("Result is %lf\n", this->result);
         }
     }
 
     void empty()
     {
         formula.empty();
-        RPN.empty();
         op.empty();
         num.empty();
     }
@@ -62,28 +59,28 @@ public:
         return true;
     }
 
-    double getFigure(int &i)
+    double getFigure(string formula, int &i)
     {
         double num = 0, k = 1;
         bool point = false;
-        for (; isdigit(this->formula[i]) || this->formula[i] == '.'; i++)
+        for (; isdigit(formula[i]) || formula[i] == '.'; i++)
         {
             if (!point)
             {
-                if (isdigit(this->formula[i]))
+                if (isdigit(formula[i]))
                 {
-                    num = num * 10 + this->formula[i] - '0';
+                    num = num * 10 + formula[i] - '0';
                 }
-                else if (this->formula[i] == '.')
+                else if (formula[i] == '.')
                 {
                     point = true;
                 }
             }
             else
             {
-                if (isdigit(this->formula[i]))
+                if (isdigit(formula[i]))
                 {
-                    num = num + (this->formula[i] - '0') / pow(10, k);
+                    num = num + (formula[i] - '0') / pow(10, k);
                     k++;
                 }
             }
@@ -92,16 +89,46 @@ public:
         return num;
     }
 
-    void toRPN()
+    void dealWithflag(char flag)
+    {
+        double num1, num2;
+        num2 = num.top();
+        num.pop();
+        num1 = num.top();
+        num.pop();
+        switch (flag)
+        {
+        case '+':
+        {
+            num.push(num1 + num2);
+            break;
+        }
+        case '-':
+        {
+            num.push(num1 - num2);
+            break;
+        }
+        case '*':
+        {
+            num.push(num1 * num2);
+            break;
+        }
+        case '/':
+        {
+            num.push(num1 / num2);
+            break;
+        }
+        }
+    }
+
+    void caculate()
     {
         op.push('#');
-        char num[1024] = {0};
         for (int i = 0; i < this->formula.length(); i++)
         {
             if (isdigit(this->formula[i]) || this->formula[i] == '.')
             {
-                sprintf(num, "%d ", (int)getFigure(i));
-                this->RPN.append(num);
+                num.push((int)getFigure(this->formula, i));
             }
             else if (getPriority(this->formula[i]) > 0)
             {
@@ -113,8 +140,7 @@ public:
                 {
                     while (op.top() != '(')
                     {
-                        sprintf(num, "%c ", op.top());
-                        this->RPN.append(num);
+                        dealWithflag(op.top());
                         op.pop();
                     }
                     op.pop();
@@ -127,8 +153,7 @@ public:
                 {
                     while (getPriority(this->formula[i]) <= getPriority(op.top()))
                     {
-                        sprintf(num, "%c ", op.top());
-                        this->RPN.append(num);
+                        dealWithflag(op.top());
                         op.pop();
                     }
                     op.push(this->formula[i]);
@@ -137,56 +162,8 @@ public:
         }
         while (op.top() != '#')
         {
-            sprintf(num, "%c ", op.top());
-            this->RPN.append(num);
+            dealWithflag(op.top());
             op.pop();
-        }
-        // cout << this->RPN << endl;
-    }
-
-    void caculateRPN()
-    {
-        for (int i = 0; i < this->RPN.length(); i++)
-        {
-            if (RPN[i] == ' ')
-            {
-                continue;
-            }
-            else if (isdigit(this->RPN[i]))
-            {
-                num.push(getFigure(i));
-            }
-            else if (getPriority(RPN[i]) > 0)
-            {
-                double num1, num2;
-                num2 = num.top();
-                num.pop();
-                num1 = num.top();
-                num.pop();
-                switch (RPN[i])
-                {
-                case '+':
-                {
-                    num.push(num1 + num2);
-                    break;
-                }
-                case '-':
-                {
-                    num.push(num1 - num2);
-                    break;
-                }
-                case '*':
-                {
-                    num.push(num1 * num2);
-                    break;
-                }
-                case '/':
-                {
-                    num.push(num1 / num2);
-                    break;
-                }
-                }
-            }
         }
         result = num.top();
         num.pop();
@@ -194,13 +171,14 @@ public:
 
 private:
     string formula;
-    string RPN;
+    //string RPN;
     stack<char> op;
     stack<double> num;
     double result;
 
 protected:
 };
+
 int main()
 {
     caculator cac;
