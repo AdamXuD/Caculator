@@ -10,18 +10,20 @@ using namespace std;
 class caculator
 {
 public:
-    void start()
+    void main()
     {
         while (1)
         {
             empty();
-            cout << "ÇëÊäÈëËãÊ½>" << endl;
+            cout << "Input your formula here:>" << endl;
             getline(cin, this->formula, ';');
             if (!isLegal())
             {
                 continue;
             }
             toRPN();
+            caculateRPN();
+            printf("Result is %d", (int)this->result);
         }
     }
 
@@ -141,17 +143,65 @@ public:
         // cout << this->RPN << endl;
     }
 
+    void caculateRPN()
+    {
+        for (int i = 0; i < this->RPN.length(); i++)
+        {
+            if (RPN[i] == ' ')
+            {
+                continue;
+            }
+            else if (isdigit(this->RPN[i]))
+            {
+                num.push(getFigure(i));
+            }
+            else if (getPriority(RPN[i]) > 0)
+            {
+                double num1, num2;
+                num2 = num.top();
+                num.pop();
+                num1 = num.top();
+                num.pop();
+                switch (RPN[i])
+                {
+                case '+':
+                {
+                    num.push(num1 + num2);
+                    break;
+                }
+                case '-':
+                {
+                    num.push(num1 - num2);
+                    break;
+                }
+                case '*':
+                {
+                    num.push(num1 * num2);
+                    break;
+                }
+                case '/':
+                {
+                    num.push(num1 / num2);
+                    break;
+                }
+                }
+            }
+        }
+        result = num.top();
+        num.pop();
+    }
 
 private:
     string formula;
     string RPN;
     stack<char> op;
     stack<double> num;
+    double result;
 
 protected:
 };
 int main()
 {
     caculator cac;
-    cac.start();
+    cac.main();
 }
