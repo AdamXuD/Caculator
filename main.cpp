@@ -24,6 +24,7 @@ public:
             toRPN();
             caculateRPN();
             printf("Result is %d", (int)this->result);
+            empty();
         }
     }
 
