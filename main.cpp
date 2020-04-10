@@ -6,9 +6,10 @@
 #include <cmath>
 #include <typeinfo>
 #include <stack>
-#include <list>
 
 using namespace std;
+
+class equation;
 
 class RPN
 {
@@ -118,76 +119,207 @@ public:
         }
     }
 
-    template<typename _T>
+    double substitute(string equation, double x)
+    {
+        RPN tmp;
+        char num[50] = {0};
+        sprintf(num, "%.10f", x);
+        tmp.formula = equation;
+        for (int i = 0; tmp.formula[i] != '\0'; i++)
+        {
+            if (tmp.formula[i] == 'x')
+            {
+                tmp.formula.replace(i, 1, num);
+            }
+        }
+        return tmp.caculate();
+    }
+
+    double caculateintegral(double lo, double hi, string equation, int n = 1000)
+    {
+        double x;
+        double step = (hi - lo) / n;
+
+        double result = 0.0;
+        x = lo;
+        for (int i = 1; i < n; i++)
+        {
+            x += step;
+            result += substitute(equation, x);
+        }
+
+        result += (substitute(equation, lo) + substitute(equation, hi)) / 2;
+        result *= step;
+
+        return result;
+    }
+
     double dealWithAlpha(int &i)
     {
         switch (formula[i])
         {
         case 's':
         {
-            int end = formula.find(')', i);
             int head = formula.find('(', i);
-            i = end;
-            _T inner(formula.substr(head, end - head - 1));
+            stack<char> flag;
+            for (i = head; formula[i] != '\0'; i++)
+            {
+                if (formula[i] == '(')
+                {
+                    flag.push(formula[i]);
+                }
+                else if (formula[i] == ')')
+                {
+                    flag.pop();
+                }
+                if (flag.size() == 0)
+                {
+                    break;
+                }
+            }
+            int end = i;
+            RPN inner(formula.substr(head + 1, end - head - 1));
             return sin(inner.caculate());
         }
         case 'c':
         {
-            int end = formula.find(')', i);
             int head = formula.find('(', i);
-            i = end;
-            _T inner(formula.substr(head, end - head - 1));
+            stack<char> flag;
+            for (i = head; formula[i] != '\0'; i++)
+            {
+                if (formula[i] == '(')
+                {
+                    flag.push(formula[i]);
+                }
+                else if (formula[i] == ')')
+                {
+                    flag.pop();
+                }
+                if (flag.size() == 0)
+                {
+                    break;
+                }
+            }
+            int end = i;
+            RPN inner(formula.substr(head + 1, end - head - 1));
             return cos(inner.caculate());
         }
         case 't':
         {
-            int end = formula.find(')', i);
             int head = formula.find('(', i);
-            i = end;
-            _T inner(formula.substr(head, end - head - 1));
+            stack<char> flag;
+            for (i = head; formula[i] != '\0'; i++)
+            {
+                if (formula[i] == '(')
+                {
+                    flag.push(formula[i]);
+                }
+                else if (formula[i] == ')')
+                {
+                    flag.pop();
+                }
+                if (flag.size() == 0)
+                {
+                    break;
+                }
+            }
+            int end = i;
+            RPN inner(formula.substr(head + 1, end - head - 1));
             return tan(inner.caculate());
         }
         case 'i':
         {
-            /*积分部分*/
-            int end = formula.find(')', i);
+            int comma_1 = formula.find(',', i);
             int head = formula.find('(', i);
-            i = end;
-            _T inner(formula.substr(head, end - head - 1));
+            RPN first(formula.substr(head + 1, comma_1 - head - 1));
+            double lo = first.caculate();
+            int comma_2 = formula.find(',', comma_1 + 1);
+            RPN second(formula.substr(comma_1 + 1, comma_2 - comma_1 - 1));
+            double hi = second.caculate();
+            stack<char> flag;
+            for (i = head; formula[i] != '\0'; i++)
+            {
+                if (formula[i] == '(')
+                {
+                    flag.push(formula[i]);
+                }
+                else if (formula[i] == ')')
+                {
+                    flag.pop();
+                }
+                if (flag.size() == 0)
+                {
+                    break;
+                }
+            }
+            int end = i;
+            string equation = formula.substr(comma_2 + 1, end - comma_2 - 1);
+            return caculateintegral(lo, hi, equation);
         }
         case 'l':
         {
             if (formula.find("log") != string::npos)
             {
-                int end = formula.find(')', i);
-                int head = formula.find(',', i);
-                i = end;
-                _T inner_down(formula.substr(head, end - head - 1));
+                int comma = formula.find(',', i);
+                int head = formula.find('(', i);
+                stack<char> flag;
+                for (i = head; formula[i] != '\0'; i++)
+                {
+                    if (formula[i] == '(')
+                    {
+                        flag.push(formula[i]);
+                    }
+                    else if (formula[i] == ')')
+                    {
+                        flag.pop();
+                    }
+                    if (flag.size() == 0)
+                    {
+                        break;
+                    }
+                }
+                int end = i;
+                RPN inner_down(formula.substr(head + 1, comma - head - 1));
                 double down = inner_down.caculate();
-                _T inner_up(formula.substr(head, end - head - 1));
+                RPN inner_up(formula.substr(comma + 1, end - comma - 1));
                 double up = inner_up.caculate();
                 return log(up) / log(down);
             }
             else if (formula.find("ln") != string::npos)
             {
-                int end = formula.find(')', i);
                 int head = formula.find('(', i);
-                i = end;
-                _T inner(formula.substr(head, end - head - 1));
+                stack<char> flag;
+                for (i = head; formula[i] != '\0'; i++)
+                {
+                    if (formula[i] == '(')
+                    {
+                        flag.push(formula[i]);
+                    }
+                    else if (formula[i] == ')')
+                    {
+                        flag.pop();
+                    }
+                    if (flag.size() == 0)
+                    {
+                        break;
+                    }
+                }
+                int end = i;
+                RPN inner(formula.substr(head + 1, end - head - 1));
                 return log(inner.caculate());
             }
         }
         case 'p':
         {
-            i += 2;
+            i++;
             return M_PI;
         }
         case 'e':
         {
-            i++;
             return M_E;
         }
         }
+        return 0;
     }
 
     double caculate()
@@ -201,7 +333,7 @@ public:
             }
             else if (isalpha(this->formula[i]))
             {
-                num.push(dealWithAlpha<RPN>(i));
+                num.push(dealWithAlpha(i));
             }
             else if (getPriority(this->formula[i]) > 0)
             {
@@ -246,101 +378,6 @@ public:
 private:
     stack<char> op;
     stack<double> num;
-
-protected:
-};
-
-class equation : private RPN
-{
-public:
-    equation(string str, double low, double high)
-    {
-        this->formula = str;
-        this->lo = low;
-        this->hi = hi;
-    }
-
-    double caculate(double x)
-    {
-        op.push('#');
-        for (int i = 0; i < this->formula.length(); i++)
-        {
-            if (isdigit(this->formula[i]) || this->formula[i] == '.')
-            {
-                num.push(getFigure(this->formula, i));
-            }
-            else if (this->formula[i] == 'x')
-            {
-                num.push(x);
-            }
-            else if (isalpha(this->formula[i]))
-            {
-                num.push(dealWithAlpha<equation>(i));
-            }
-            else if (getPriority(this->formula[i]) > 0)
-            {
-                if (this->formula[i] == '(')
-                {
-                    op.push(this->formula[i]);
-                }
-                else if (this->formula[i] == ')')
-                {
-                    while (op.top() != '(')
-                    {
-                        dealWithflag(op.top());
-                        op.pop();
-                    }
-                    op.pop();
-                }
-                else if (getPriority(this->formula[i]) > getPriority(op.top()))
-                {
-                    op.push(this->formula[i]);
-                }
-                else if (getPriority(this->formula[i]) <= getPriority(op.top()))
-                {
-                    while (getPriority(this->formula[i]) <= getPriority(op.top()))
-                    {
-                        dealWithflag(op.top());
-                        op.pop();
-                    }
-                    op.push(this->formula[i]);
-                }
-            }
-        }
-        while (op.top() != '#')
-        {
-            dealWithflag(op.top());
-            op.pop();
-        }
-        double result = num.top();
-        num.pop();
-        return result;
-    }
-
-    double caculateintegral(double lo, double hi, int n = 1000)
-    { //lo:���ޣ�hi:���ޣ�Func:������n:�ȷ���
-        double x;
-        double step = (hi - lo) / n;
-
-        double result = 0.0;
-        x = lo;
-        for (int i = 1; i < n; i++)
-        {
-            x += step;
-            result += caculate(x);
-        }
-        result += (caculate(lo) + caculate(hi)) / 2;
-        result *= step;
-
-        return result;
-    }
-
-private:
-    double lo;
-    double hi;
-    stack<char> op;
-    stack<double> num;
-    string formula;
 
 protected:
 };
@@ -355,10 +392,7 @@ public:
             empty();
             cout << "Input your formula here (put a ';' at the end of formula)>" << endl;
             getline(cin, this->cac.formula, ';');
-            if (!isLegal())
-            {
-                continue;
-            }
+            getchar();
             this->result = cac.caculate();
             printf("Result is %lf\n", this->result);
         }
@@ -369,10 +403,6 @@ public:
         cac.empty();
     }
 
-    bool isLegal()
-    {
-        return true;
-    }
 
 private:
     RPN cac;
