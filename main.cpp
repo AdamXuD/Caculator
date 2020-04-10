@@ -1,11 +1,176 @@
+#define _USE_MATH_DEFINES
 #include <iostream>
 #include <string>
 #include <cctype>
 #include <cstring>
 #include <cmath>
+#include <typeinfo>
 #include <stack>
+#include <list>
 
 using namespace std;
+
+class integral : private caculator
+{
+public:
+    integral(string str, double low, double high)
+    {
+        this->formula = str;
+        this->lo = low;
+        this->hi = hi;
+        caculate();
+    }
+
+    double dealWithAlpha(int &i, double x)
+    {
+        switch (formula[i])
+        {
+        case 's':
+        {
+            int end = formula.find(')', i);
+            int head = formula.find('(', i) + 1;
+            i = end;
+            return sin(getFigure(formula, head));
+        }
+        case 'c':
+        {
+            int end = formula.find(')', i);
+            int head = formula.find('(', i) + 1;
+            i = end;
+            return cos(getFigure(formula, head));
+        }
+        case 't':
+        {
+            int end = formula.find(')', i);
+            int head = formula.find('(', i) + 1;
+            i = end;
+            return tan(getFigure(formula, head));
+        }
+        case 'i':
+        {
+            list<char> integral;
+            string integral_formula;
+
+            return 0;
+        }
+        case 'l':
+        {
+            if (formula.find("log") != string::npos)
+            {
+                int end = formula.find(')', i);
+                int head = formula.find('(', i) + 1;
+                i = end;
+                double down = getFigure(formula, head);
+                do
+                {
+                    head++;
+                } while (isdigit(formula[head]) == 0);
+                double up = getFigure(formula, head);
+                return log(up) / log(down);
+            }
+            else if (formula.find("ln") != string::npos)
+            {
+                int end = formula.find(')', i);
+                int head = formula.find('(', i) + 1;
+                i = end;
+                return log(getFigure(formula, head));
+            }
+        }
+        case 'p':
+        {
+            i += 2;
+            return M_PI;
+        }
+        case 'e':
+        {
+            i++;
+            return M_E;
+        }
+        }
+        return 0;
+    }
+
+    void caculate()
+    {
+        op.push('#');
+        for (int i = 0; i < this->formula.length(); i++)
+        {
+            if (this->formula[i] = 'x')
+            {
+                num.push(formula[i]);
+            }
+            else if (isalpha(this->formula[i]))
+            {
+                num.push(dealWithAlpha(i));
+            }
+            else if (getPriority(this->formula[i]) > 0)
+            {
+                if (this->formula[i] == '(')
+                {
+                    op.push(this->formula[i]);
+                }
+                else if (this->formula[i] == ')')
+                {
+                    while (op.top() != '(')
+                    {
+                        dealWithflag(op.top());
+                        op.pop();
+                    }
+                    op.pop();
+                }
+                else if (getPriority(this->formula[i]) > getPriority(op.top()))
+                {
+                    op.push(this->formula[i]);
+                }
+                else if (getPriority(this->formula[i]) <= getPriority(op.top()))
+                {
+                    while (getPriority(this->formula[i]) <= getPriority(op.top()))
+                    {
+                        dealWithflag(op.top());
+                        op.pop();
+                    }
+                    op.push(this->formula[i]);
+                }
+            }
+        }
+        while (op.top() != '#')
+        {
+            dealWithflag(op.top());
+            op.pop();
+        }
+    }
+
+    double Func(list<char> integral, double x)
+    {
+    }
+
+    double caculatorintegral(double lo, double hi, double (*Func)(double), int n = 1000)
+    { //lo:下限；hi:上限；Func:函数；n:等分数
+        double x;
+        double step = (hi - lo) / n;
+
+        double result = 0.0;
+        x = lo;
+        for (int i = 1; i < n; i++)
+        {
+            x += step;
+            result += Func(x);
+        }
+        result += (Func(lo) + Func(hi)) / 2;
+        result *= step;
+
+        return result;
+    }
+
+private:
+    double lo;
+    double hi;
+    stack<char> op;
+    stack<double> num;
+    string formula;
+
+protected:
+};
 
 class caculator
 {
@@ -47,8 +212,10 @@ public:
         case '*':
         case '/':
             return 3;
-        case ')':
+        case '^':
             return 4;
+        case ')':
+            return 5;
         default:
             return -1;
         }
@@ -63,7 +230,7 @@ public:
     {
         double num = 0, k = 1;
         bool point = false;
-        for (; isdigit(formula[i]) || formula[i] == '.'; i++)
+        for (; isdigit(formula[i]) || formula[i] == '.' || formula[i] == ' '; i++)
         {
             if (!point)
             {
@@ -118,7 +285,81 @@ public:
             num.push(num1 / num2);
             break;
         }
+        case '^':
+        {
+            num.push(pow(num1, num2));
+            break;
         }
+        }
+    }
+
+    double dealWithAlpha(int &i)
+    {
+        switch (formula[i])
+        {
+        case 's':
+        {
+            int end = formula.find(')', i);
+            int head = formula.find('(', i) + 1;
+            i = end;
+            return sin(getFigure(formula, head));
+        }
+        case 'c':
+        {
+            int end = formula.find(')', i);
+            int head = formula.find('(', i) + 1;
+            i = end;
+            return cos(getFigure(formula, head));
+        }
+        case 't':
+        {
+            int end = formula.find(')', i);
+            int head = formula.find('(', i) + 1;
+            i = end;
+            return tan(getFigure(formula, head));
+        }
+        case 'i':
+        {
+            list<char> integral;
+            string integral_formula;
+
+            return 0;
+        }
+        case 'l':
+        {
+            if (formula.find("log") != string::npos)
+            {
+                int end = formula.find(')', i);
+                int head = formula.find('(', i) + 1;
+                i = end;
+                double down = getFigure(formula, head);
+                do
+                {
+                    head++;
+                } while (isdigit(formula[head]) == 0);
+                double up = getFigure(formula, head);
+                return log(up) / log(down);
+            }
+            else if (formula.find("ln") != string::npos)
+            {
+                int end = formula.find(')', i);
+                int head = formula.find('(', i) + 1;
+                i = end;
+                return log(getFigure(formula, head));
+            }
+        }
+        case 'p':
+        {
+            i += 2;
+            return M_PI;
+        }
+        case 'e':
+        {
+            i++;
+            return M_E;
+        }
+        }
+        return 0;
     }
 
     void caculate()
@@ -128,7 +369,11 @@ public:
         {
             if (isdigit(this->formula[i]) || this->formula[i] == '.')
             {
-                num.push((int)getFigure(this->formula, i));
+                num.push(getFigure(this->formula, i));
+            }
+            else if (isalpha(this->formula[i]))
+            {
+                num.push(dealWithAlpha(i));
             }
             else if (getPriority(this->formula[i]) > 0)
             {
@@ -171,7 +416,6 @@ public:
 
 private:
     string formula;
-    //string RPN;
     stack<char> op;
     stack<double> num;
     double result;
