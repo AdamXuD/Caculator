@@ -9,7 +9,6 @@
 
 using namespace std;
 
-class equation;
 
 class RPN
 {
@@ -31,6 +30,17 @@ public:
 
     void dealWithflag(char flag)
     {
+        if (flag == '!')
+        {
+            double number = num.top(), sum = 1;
+            num.pop();
+            while(number != 0)
+            {
+                sum *= number--;
+            }
+            num.push(sum);
+            return;
+        }
         double num1, num2;
         num2 = num.top();
         num.pop();
@@ -64,6 +74,7 @@ public:
             break;
         }
         }
+        return;
     }
 
     double getFigure(string formula, int &i)
@@ -111,6 +122,7 @@ public:
         case '/':
             return 3;
         case '^':
+        case '!':
             return 4;
         case ')':
             return 5;
@@ -367,7 +379,8 @@ public:
         }
         while (op.top() != '#')
         {
-            dealWithflag(op.top());
+            char flag = op.top();
+            dealWithflag(flag);
             op.pop();
         }
         double result = num.top();
