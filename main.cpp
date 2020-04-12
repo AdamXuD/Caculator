@@ -1,14 +1,11 @@
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <string>
-#include <cctype>
 #include <cstring>
 #include <cmath>
-#include <typeinfo>
 #include <stack>
 
 using namespace std;
-
 
 class RPN
 {
@@ -18,8 +15,6 @@ public:
     {
         this->formula = str;
     }
-
-    RPN() {}
 
     void empty()
     {
@@ -34,7 +29,7 @@ public:
         {
             double number = num.top(), sum = 1;
             num.pop();
-            while(number != 0)
+            while (number != 0)
             {
                 sum *= number--;
             }
@@ -133,9 +128,9 @@ public:
 
     double substitute(string equation, double x)
     {
-        RPN tmp;
         char num[50] = {0};
         sprintf(num, "%.10f", x);
+        RPN tmp(num);
         tmp.formula = equation;
         for (int i = 0; tmp.formula[i] != '\0'; i++)
         {
@@ -166,78 +161,48 @@ public:
         return result;
     }
 
+    double handleBracket(int &i)
+    {
+        int head = i;
+        stack<char> flag;
+        for (; formula[i] != '\0'; i++)
+        {
+            if (formula[i] == '(')
+            {
+                flag.push(formula[i]);
+            }
+            else if (formula[i] == ')')
+            {
+                flag.pop();
+            }
+            if (flag.size() == 0)
+            {
+                break;
+            }
+        }
+        int end = i;
+        RPN inner(formula.substr(head + 1, end - head - 1));
+        return inner.caculate();
+    }
+
     double dealWithAlpha(int &i)
     {
         switch (formula[i])
         {
         case 's':
         {
-            int head = formula.find('(', i);
-            stack<char> flag;
-            for (i = head; formula[i] != '\0'; i++)
-            {
-                if (formula[i] == '(')
-                {
-                    flag.push(formula[i]);
-                }
-                else if (formula[i] == ')')
-                {
-                    flag.pop();
-                }
-                if (flag.size() == 0)
-                {
-                    break;
-                }
-            }
-            int end = i;
-            RPN inner(formula.substr(head + 1, end - head - 1));
-            return sin(inner.caculate());
+            i = formula.find('(', i);
+            return sin(handleBracket(i));
         }
         case 'c':
         {
-            int head = formula.find('(', i);
-            stack<char> flag;
-            for (i = head; formula[i] != '\0'; i++)
-            {
-                if (formula[i] == '(')
-                {
-                    flag.push(formula[i]);
-                }
-                else if (formula[i] == ')')
-                {
-                    flag.pop();
-                }
-                if (flag.size() == 0)
-                {
-                    break;
-                }
-            }
-            int end = i;
-            RPN inner(formula.substr(head + 1, end - head - 1));
-            return cos(inner.caculate());
+            i = formula.find('(', i);
+            return cos(handleBracket(i));
         }
         case 't':
         {
-            int head = formula.find('(', i);
-            stack<char> flag;
-            for (i = head; formula[i] != '\0'; i++)
-            {
-                if (formula[i] == '(')
-                {
-                    flag.push(formula[i]);
-                }
-                else if (formula[i] == ')')
-                {
-                    flag.pop();
-                }
-                if (flag.size() == 0)
-                {
-                    break;
-                }
-            }
-            int end = i;
-            RPN inner(formula.substr(head + 1, end - head - 1));
-            return tan(inner.caculate());
+            i = formula.find('(', i);
+            return tan(handleBracket(i));
         }
         case 'i':
         {
@@ -299,26 +264,8 @@ public:
             }
             else if (formula.find("ln") != string::npos)
             {
-                int head = formula.find('(', i);
-                stack<char> flag;
-                for (i = head; formula[i] != '\0'; i++)
-                {
-                    if (formula[i] == '(')
-                    {
-                        flag.push(formula[i]);
-                    }
-                    else if (formula[i] == ')')
-                    {
-                        flag.pop();
-                    }
-                    if (flag.size() == 0)
-                    {
-                        break;
-                    }
-                }
-                int end = i;
-                RPN inner(formula.substr(head + 1, end - head - 1));
-                return log(inner.caculate());
+                i = formula.find('(', i);
+                return log(handleBracket(i));
             }
         }
         case 'p':
@@ -351,16 +298,11 @@ public:
             {
                 if (this->formula[i] == '(')
                 {
-                    op.push(this->formula[i]);
+                    num.push(handleBracket(i));
                 }
                 else if (this->formula[i] == ')')
                 {
-                    while (op.top() != '(')
-                    {
-                        dealWithflag(op.top());
-                        op.pop();
-                    }
-                    op.pop();
+                    continue;
                 }
                 else if (getPriority(this->formula[i]) > getPriority(op.top()))
                 {
@@ -402,23 +344,71 @@ public:
     {
         while (1)
         {
-            empty();
             cout << "Input your formula here (put a ';' at the end of formula)>" << endl;
-            getline(cin, this->cac.formula, ';');
+            getline(cin, this->formula, ';');
             getchar();
+            RPN cac(formula);
             this->result = cac.caculate();
             printf("Result is %lf\n", this->result);
         }
     }
 
-    void empty()
+private:
+    string formula;
+    double result;
+
+protected:
+};
+
+class determinant
+{
+public:
+    void main()
     {
-        cac.empty();
+        cout << "请输入行列式（每行以'/'结尾，行列式结束处以'//'结尾）>" << endl;
+        for (col = 0;;col++)
+        {
+            for (row = 0;;row++)
+            {
+                cin >> data[col][row];
+                if (*(data[col][row].end() - 1) == '/')
+                {
+                    data[col][row].erase(data[col][row].end() - 1);
+                    break;
+                }
+            }
+            if (*(data[col][row].end() - 1) == '/')
+            {
+                data[col][row].erase(data[col][row].end() - 1);
+                break;
+            }
+        }
+        for (int i = 0; i <= col;i++)
+        {
+            for (int j = 0; j <= row;j++)
+            {
+                RPN tmp(data[i][j]);
+                num[i][j] = tmp.caculate();
+            }
+        }
+        col++;
+        row++;
     }
 
+    void caculate()
+    {
+        for (int i = 1; i <= col; i++)
+        {
+            
+        }
+    }
 
+    
 private:
-    RPN cac;
+    string data[100][100];
+    double num[100][100];
+    int row;
+    int col;
     double result;
 
 protected:
@@ -426,6 +416,8 @@ protected:
 
 int main()
 {
-    caculator cac;
-    cac.main();
+    // caculator cac;
+    // cac.main();
+    determinant det;
+    det.main();
 }
