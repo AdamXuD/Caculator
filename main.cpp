@@ -5,7 +5,91 @@
 #include <cmath>
 #include <stack>
 
+#ifdef _MSC_VER
+#define < conio.h>
+#elif defined __GNUC__
+#include <termios.h>
+#endif
+
 using namespace std;
+
+#ifdef __GNUC__
+int getch()
+{
+    int cr;
+    struct termios nts, ots;
+
+    if (tcgetattr(0, &ots) < 0) // 得到当前终端(0表示标准输入)的设置
+        return EOF;
+
+    nts = ots;
+    cfmakeraw(&nts);                     // 设置终端为Raw原始模式，该模式下所有的输入数据以字节为单位被处理
+    if (tcsetattr(0, TCSANOW, &nts) < 0) // 设置上更改之后的设置
+        return EOF;
+
+    cr = getchar();
+    if (tcsetattr(0, TCSANOW, &ots) < 0) // 设置还原成老的模式
+        return EOF;
+
+    return cr;
+}
+#endif
+
+void clear()
+{
+#ifdef __GNUC__
+    system("clear");
+#elif defined _MSC_VER
+    system("cls");
+#endif
+}
+
+int menu(string list[], int size) //这个
+{
+    int select = 1;
+    while (1)
+    {
+        clear();
+        for (int i = 0; i < size; i++)
+        {
+            if (i == select - 1)
+            {
+                cout << "\033[7m"
+                     << ">" << list[i] << "\033[0m" << endl;
+            }
+            else
+            {
+                cout << ">" << list[i] << endl;
+            }
+        }
+        //上下键相当于同时按下224和（72或者80）键
+        //而回车键是13
+        int ch1 = getch(); //获取第一个键
+        if (ch1 == 13)
+        {
+            return select; //如果是回车 返回菜单号
+        }
+        int ch2 = getch(); //如果不是回车 获取第二个键值
+        int ch3 = getch();
+        if (ch1 == 27 && ch2 == 91 && ch3 == 66)
+        {
+            select++;
+        }
+        else if (ch1 == 27 && ch2 == 91 && ch3 == 65) //判断按下了哪个键
+        {
+            select--;
+        }
+
+        if (select > size) //判断越界
+        {
+            select = 1;
+        }
+        else if (select < 1)
+        {
+            select = size;
+        }
+    }
+}
 
 class RPN
 {
@@ -363,47 +447,91 @@ protected:
 class determinant
 {
 public:
+    determinant()
+    {
+        memset(num, 0, sizeof(num));
+        row = 0;
+        col = 0;
+        result = 0;
+    }
+
     void main()
     {
-        cout << "����������ʽ��ÿ����'/'��β������ʽ��������'//'��β��>" << endl;
-        for (col = 0;;col++)
+        while (1)
         {
-            for (row = 0;;row++)
+            cout << "Please input the determinant(Input '/' at the end of line and put another '/' at the end of determinant>)" << endl;
+            for (col = 0;; col++)
             {
-                cin >> data[col][row];
+                for (row = 0;; row++)
+                {
+                    cin >> data[col][row];
+                    if (*(data[col][row].end() - 1) == '/')
+                    {
+                        data[col][row].erase(data[col][row].end() - 1);
+                        break;
+                    }
+                }
                 if (*(data[col][row].end() - 1) == '/')
                 {
                     data[col][row].erase(data[col][row].end() - 1);
                     break;
                 }
             }
-            if (*(data[col][row].end() - 1) == '/')
+            for (int i = 0; i <= col; i++)
             {
-                data[col][row].erase(data[col][row].end() - 1);
-                break;
+                for (int j = 0; j <= row; j++)
+                {
+                    RPN tmp(data[i][j]);
+                    num[i][j] = tmp.caculate();
+                }
             }
+            caculate();
         }
-        for (int i = 0; i <= col;i++)
-        {
-            for (int j = 0; j <= row;j++)
-            {
-                RPN tmp(data[i][j]);
-                num[i][j] = tmp.caculate();
-            }
-        }
-        col++;
-        row++;
     }
 
     void caculate()
     {
-        for (int i = 1; i <= col; i++)
+        double master = 0, sub = 0;
+        for (int t_col = 0; t_col <= col; t_col++)
         {
-            
+            double branch = 1;
+            for (int i = 0, j = t_col; i <= row; i++, j++)
+            {
+                if (j > col)
+                {
+                    j -= (col + 1);
+                }
+                cout << branch;
+                branch *= num[i][j];
+                cout << " * " << num[i][j] << " = " << branch << endl;
+            }
+            cout << master;
+            master += branch;
+            cout << " + " << branch << " = " << master << endl;
+            cout << endl;
         }
+        for (int t_col = col; t_col >= 0; t_col--)
+        {
+            double branch = 1;
+            for (int i = 0, j = t_col; i <= row; i++, j--)
+            {
+                if (j < 0)
+                {
+                    j += (col + 1);
+                }
+                cout << branch;
+                branch *= num[i][j];
+                cout << " * " << num[i][j] << " = " << branch << endl;
+            }
+            cout << sub;
+            sub += branch;
+            cout << " + " << branch << " = " << sub << endl;
+            cout << endl;
+        }
+        result = master - sub;
+        cout << "Result is> " << result << endl;
     }
 
-    
 private:
     string data[100][100];
     double num[100][100];
@@ -416,8 +544,10 @@ protected:
 
 int main()
 {
-    // caculator cac;
-    // cac.main();
-    determinant det;
-    det.main();
+    string menu_list[] = {"科学计算器", "行列式计算器"};
+    switch(menu(menu_list, 2))
+    {
+        case 1:{ caculator cac; cac.main(); break; }
+        case 2:{ determinant det; det.main(); break; }
+    }
 }
