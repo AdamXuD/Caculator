@@ -6,7 +6,7 @@
 #include <stack>
 
 #ifdef _MSC_VER
-#define < conio.h>
+#include <conio.h>
 #elif defined __GNUC__
 #include <termios.h>
 #endif
@@ -19,11 +19,11 @@ int getch()
     int cr;
     struct termios nts, ots;
 
-    if (tcgetattr(0, &ots) < 0) // 得到当前终端(0表示标准输入)的设置
+    if (tcgetattr(0, &ots) < 0) // 得到当前终端(0表示标准输入)的设�?
         return EOF;
 
     nts = ots;
-    cfmakeraw(&nts);                     // 设置终端为Raw原始模式，该模式下所有的输入数据以字节为单位被处理
+    cfmakeraw(&nts);                     // 设置终端为Raw原始模式，该模式下所有的输入数据以字节为单位被处�?
     if (tcsetattr(0, TCSANOW, &nts) < 0) // 设置上更改之后的设置
         return EOF;
 
@@ -62,14 +62,14 @@ int menu(string list[], int size) //这个
                 cout << ">" << list[i] << endl;
             }
         }
-        //上下键相当于同时按下224和（72或者80）键
-        //而回车键是13
+        //上下键相当于同时按下224和（72或�?80）键
+        //而回车键�?13
         int ch1 = getch(); //获取第一个键
         if (ch1 == 13)
         {
-            return select; //如果是回车 返回菜单号
+            return select; //如果是回�? 返回菜单�?
         }
-        int ch2 = getch(); //如果不是回车 获取第二个键值
+        int ch2 = getch(); //如果不是回车 获取第二个键�?
         int ch3 = getch();
         if (ch1 == 27 && ch2 == 91 && ch3 == 66)
         {
